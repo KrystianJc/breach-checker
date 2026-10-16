@@ -113,3 +113,37 @@ CONTAINER ID IMAGE COMMAND CREATED STATUS PORTS NAMES
 343728b62573 krystian-frontend:latest "/docker-entrypoint.…" 2 minutes ago Up 2 minutes 0.0.0.0:8080->80/tcp, [::]:8080->80/tcp frontend
 
 Czas jest taki sam ponieważ RUN date > /usr/share/nginx/html/build.txt jest zapisane w pamięci Cache
+
+zadanie 3
+
+docker run --rm breach-checker-frontend:v2 cat /etc/nginx/conf.d/default.conf
+
+location / {
+root /usr/share/nginx/html;
+index index.html index.htm;
+}
+Dyrektywa `root` mówi nginx, z którego katalogu serwować pliki strony, dlatego nasze pliki muszą trafić właśnie do `/usr/share/nginx/html`, bo tylko stamtąd nginx je udostępni.
+
+zadanie 4
+docker exec bc-broken ls /usr/share/nginx
+html
+index.html
+script.js
+style.css
+
+docker exec bc-broken ls /usr/share/nginx/html
+50x.html
+build.txt
+index.html
+
+htmlhint sprawdził plik /usr/share/nginx/html/index.html, czyli domyślną stronę nginx z obrazu bazowego, a nie nasz formularz. Ta strona jest poprawnym plikiem, więc htmlhint zakończył się sukcesem i build przeszedł bez błędu.
+
+zadanie 5
+docker rmi breach-checker-frontend:latest
+Untagged: breach-checker-frontend:latest
+
+docker rmi breach-checker-frontend:v2
+Untagged: breach-checker-frontend:v2
+Deleted: sha256:c918d8b8e2e64b3421692a4190c4346f8498ae54c305cccfc2bddf347d718f07
+
+Po usunięciu latest obraz v2 nadal istniał, bo zniknęła tylko jedna z nazw wskazujących na ten sam IMAGE ID. docker rmi faktycznie usuwa obraz z dysku dopiero wtedy, gdy usuwamy ostatni tag wskazujący na dany IMAGE ID i żaden kontener z niego nie korzysta.
