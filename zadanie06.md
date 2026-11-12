@@ -24,7 +24,7 @@ collected 7 items
 tests/test_check.py ....F.. [100%]
 
 ========================================================================= FAILURES =========================================================================
-**\*\***\*\***\*\***\*\***\*\***\*\***\*\***\_\_\_**\*\***\*\***\*\***\*\***\*\***\*\***\*\*** test_uppercase_hash_is_found **\*\***\*\***\*\***\*\***\*\***\*\***\*\***\_\_\_**\*\***\*\***\*\***\*\***\*\***\*\***\*\***
+**************\*\***************\_\_\_**************\*\*************** test_uppercase_hash_is_found **************\*\***************\_\_\_**************\*\***************
 
 client = <FlaskClient <Flask 'app'>>
 
@@ -368,34 +368,6 @@ docker stats
 CONTAINER ID NAME CPU % MEM USAGE / LIMIT MEM % NET I/O BLOCK I/O PIDS
 5b28923eca34 breach-checker-frontend-1 0.00% 10.01MiB / 2.765GiB 0.35% 50.5kB / 50.5kB 11.1MB / 8.19kB 9
 
-blad.html zawierał stronę debugera Flaska z pełnym śladem
-wyjątku: ścieżki plików na serwerze , nazwy i wersje bibliotek
-(Flask, psycopg2), nazwę hosta bazy oraz fragmenty kodu z numerami linii.
+blad.html zawierał stronę debugera Flaska  z pełnym śladem
+wyjątku: ścieżki plików na serwerze , nazwy i wersje bibliotek(Flask, psycopg2), nazwę hosta bazy (`db`) oraz fragmenty kodu z numerami linii.
 Na produkcji taka odpowiedź ujawnia wewnętrzną budowę aplikacji
-
-curl http://localhost:8080/nginx.conf
-server {
-listen 80;
-
-    # Pliki strony (index.html, style.css, script.js)
-    location / {
-        root /usr/share/nginx/html;
-        index index.html;
-    }
-
-    # Wszystko pod /api/ nginx przekazuje do usługi backend w sieci Compose
-    location /api/ {
-        proxy_pass http://backend:5000/;
-    }
-
-}
-curl -I http://localhost:8080/nginx.conf
-HTTP/1.1 404 Not Found
-Server: nginx/1.31.6
-Date: Thu, 05 Nov 2026 15:25:29 GMT
-Content-Type: text/html
-Content-Length: 153
-Connection: keep-alive
-
-Obraz produkcyjny nie ma tego problemu, bo frontend/Dockerfile kopiuje do katalogu serwowanego przez nginx tylko wybrane pliki strony (COPY konkretnych plików). nginx.conf i Dockerfile zostają poza tym katalogiem — w wersji deweloperskiej błąd brał się wyłącznie z bind-mountu całego folderu ./frontend.
-Montowanie całego katalogu projektu pod katalog WWW jest ryzykowne, bo serwer udostępnia wtedy wszystko, co w nim leży — konfiguracje, Dockerfile, pliki pomocnicze, a nierzadko też .git czy pliki z sekretami — co ujawnia wewnętrzną strukturę aplikacji i może prowadzić do wycieku danych uwierzytelniających.
