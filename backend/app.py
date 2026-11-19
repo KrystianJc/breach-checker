@@ -50,5 +50,6 @@ def health():
     return jsonify({"status": "ok"})
     
 if __name__ == "__main__":
-    # 0.0.0.0 = nasłuchuj na wszystkich interfejsach kontenera, nie tylko na jego localhost
+    # Tylko tryb dev (python app.py) - w produkcji aplikację uruchamia gunicorn z Dockerfile, ten blok jest wtedy pomijany
+    # 0.0.0.0 = nasłuchuj na wszystkich interfejsach kontenera, nie tylko na jego localhost 
     app.run(host="0.0.0.0", port=5000)
