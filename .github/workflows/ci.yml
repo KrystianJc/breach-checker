@@ -57,8 +57,23 @@ jobs:
         run: docker build -t "$IMAGE:$GITHUB_SHA" frontend
       - name: Publikacja
         run: docker push "$IMAGE:$GITHUB_SHA"
+  build-log:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Nazwa obrazu (w nazwie obrazu tylko małe litery)
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/breach-checker-log" >> "$GITHUB_ENV"
+      - name: Logowanie do GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Budowanie obrazu produkcyjnego
+        run: docker build -t "$IMAGE:$GITHUB_SHA" log
+      - name: Publikacja
+        run: docker push "$IMAGE:$GITHUB_SHA"
   verify:
-    needs: [build-and-push, build-frontend]
+    needs: [build-and-push, build-frontend, build-log]
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -72,10 +87,11 @@ jobs:
         run: |
           echo "BACKEND_IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/breach-checker-backend:$GITHUB_SHA" >> "$GITHUB_ENV"
           echo "FRONTEND_IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/breach-checker-frontend:$GITHUB_SHA" >> "$GITHUB_ENV"
+          echo "LOG_IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/breach-checker-log:$GITHUB_SHA" >> "$GITHUB_ENV"
       - name: Logowanie do GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
       - name: Pobranie obrazów z rejestru
-        run: docker compose pull backend frontend
+        run: docker compose pull backend frontend log
       - name: Uruchomienie całego projektu
         run: docker compose up -d --wait
       - name: Test dymny - zapytania przez frontend, jak z przeglądarki
@@ -85,6 +101,9 @@ jobs:
           curl --fail -sS -X POST -H "Content-Type: application/json" \
             -d '{"hash":"7c4a8d09ca3762af61e59520943dc26494f8941b"}' \
             http://localhost:8080/api/check | grep '"found":true'
+      - name: Usługa log zapisała próbę
+        run: |
+          docker compose logs log | grep "'hash_prefix': '7c4a8'"
       - name: Logi przy błędzie
         if: failure()
         run: docker compose logs
@@ -107,3 +126,6 @@ jobs:
           docker pull "$REPO/breach-checker-frontend:$GITHUB_SHA"
           docker tag "$REPO/breach-checker-frontend:$GITHUB_SHA" "$REPO/breach-checker-frontend:latest"
           docker push "$REPO/breach-checker-frontend:latest"
+          docker pull "$REPO/breach-checker-log:$GITHUB_SHA"
+          docker tag "$REPO/breach-checker-log:$GITHUB_SHA" "$REPO/breach-checker-log:latest"
+          docker push "$REPO/breach-checker-log:latest"

@@ -1,5 +1,5 @@
 FROM python:3.12-slim
-LABEL org.opencontainers.image.source="https://github.com/<login-github>/breach-checker"
+LABEL org.opencontainers.image.source="https://github.com/krystianjc/breach-checker.git"
 RUN useradd --system --no-create-home appuser
 WORKDIR /app
 COPY requirements.txt .
